@@ -81,10 +81,12 @@ int main()
                 temp = g;
                 listsContainer.Add(listINT_2, &temp, sizeof(int32_t));
             }
+            printINTList(&"ADD DATA INTO LIST", listINT_2);
+
             /*------ 6.2: remove from the list                */
-            listsContainer.Remove(listINT_2, 0);
-            listsContainer.Remove(listINT_2, 24);
-            listsContainer.Remove(listINT_2, 13);
+            listsContainer.RemoveAt(listINT_2, 0);
+            listsContainer.RemoveAt(listINT_2, 20);
+            listsContainer.RemoveAt(listINT_2, 13);
             printINTList(&"REMOVE FROM LIST", listINT_2);
 
 
@@ -94,7 +96,7 @@ int main()
 static void printSTRList(char* textData,List_Typedef* list) {
     printf("------------- %s -------------\n", textData);
     for (uint16_t i = 0; i < list->Size; i++) {
-        char* str = (char*)list->QuePtr[i];
+        char* str = (char*)list->ListPtrArr[i]->ListPtr;
         printf("%s\n", str);
     }
 }
@@ -102,7 +104,7 @@ static void printSTRList(char* textData,List_Typedef* list) {
 static void printINTList(char* textData, List_Typedef* list) {
     printf("------------- %s -------------\n", textData);
     for (uint16_t i = 0; i < list->Size; i++) {
-        int32_t* temp = ((int32_t*)list->QuePtr[i]);
+        int32_t* temp = ((int32_t*)list->ListPtrArr[i]->ListPtr);
         printf("%d\n", *temp );
     }
 }
@@ -110,7 +112,7 @@ static void printINTList(char* textData, List_Typedef* list) {
 static void printFLTList(char* textData, List_Typedef* list) {
     printf("------------- %s -------------\n", textData);
     for (uint16_t i = 0; i < list->Size; i++) {
-        float* tempf = ((float*)list->QuePtr[i]);
+        float* tempf = ((float*)list->ListPtrArr[i]->ListPtr);
         printf("%f\n", *tempf);
     }
 }
@@ -118,10 +120,10 @@ static void printFLTList(char* textData, List_Typedef* list) {
 static void printStructureList(char* textData, List_Typedef* list) {
     printf("------------- %s -------------\n", textData);
     for (uint16_t i = 0; i < list->Size; i++) {
-        List_Typedef* tempf = ((List_Typedef*)list->QuePtr[i]);
+        List_Typedef* tempf = ((List_Typedef*)list->ListPtrArr[i]->ListPtr);
 
         for (uint16_t i = 0; i < tempf->Size; i++) {
-            float* temf = (float*)tempf->QuePtr[i];
+            float* temf = (float*)tempf->ListPtrArr[i]->ListPtr;
             printf("%f\n", *temf);
         }
     }
@@ -133,7 +135,7 @@ static void printListNodeAddressess(char* textData, List_Typedef* list) {
         printf("--NO DATA --\n");
     else {
         for (uint16_t i = 0; i < list->Size; i++) {
-            int32_t* temp = ((int32_t*)list->QuePtr[i]);
+            int32_t* temp = ((int32_t*)list->ListPtrArr[i]->ListPtr);
 
             printf("0x%X\n", temp);
         }

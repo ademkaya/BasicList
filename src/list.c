@@ -1,10 +1,11 @@
 #include "list.h"
 
 static List_Typedef* InitList(int16_t initialSize);
-static bool Add	 (List_Typedef* lst, void* data, uint16_t dataSizeInBytes);
-static bool Clear(List_Typedef* lst);
-static void Destroy(List_Typedef** lst);
-static void Remove(List_Typedef* lst, int16_t index);
+static bool Add		(List_Typedef* lst, void* data, uint16_t dataSizeInBytes);
+static bool Clear	(List_Typedef* lst);
+static void Destroy	(List_Typedef** lst);
+static bool RemoveAt(List_Typedef* lst, int16_t index);
+static bool Insert	(List_Typedef* lst, int16_t index, void* data, uint16_t dataSize);
 
 bool InitListContainer(ListStr_Typedef* listPtr) {
 
@@ -12,19 +13,38 @@ bool InitListContainer(ListStr_Typedef* listPtr) {
 	listPtr->Add		= &Add;
 	listPtr->Clear		= &Clear;
 	listPtr->Destroy	= &Destroy;
-	listPtr->Remove		= &Remove;
-
+	listPtr->RemoveAt	= &RemoveAt;
+	listPtr->Insert		= &Insert;
 	return true;
 }
 
 static List_Typedef* InitList(int16_t initialSize){
+
+	Root_Typedef** temp = NULL;
+	Root_Typedef* ptemp = NULL;
 
 	List_Typedef* retVal = calloc(1, sizeof(List_Typedef));
 	if (retVal != NULL) {
 		memset(retVal, 0, sizeof(List_Typedef));
 
 		if (abs(initialSize) > 0) {
-			retVal->QuePtr = (void**)calloc(initialSize, sizeof(void*));
+			temp = (Root_Typedef**)calloc(initialSize, sizeof(Root_Typedef*));
+				if (temp != NULL) {
+					retVal->ListPtrArr = temp;
+				}
+				else {
+					return NULL;
+				}
+				for (uint16_t i = 0; i < initialSize; i++) {
+					ptemp = NULL;
+					ptemp = (Root_Typedef*)calloc(1, sizeof(Root_Typedef));
+					if (ptemp != NULL) {
+						retVal->ListPtrArr[i] = ptemp;
+					}
+					else {
+						return NULL;
+					}
+				}
 			retVal->Size = initialSize;
 		}
 
@@ -33,50 +53,89 @@ static List_Typedef* InitList(int16_t initialSize){
 	return retVal;
 }
 
-static void Remove(List_Typedef* lst, int16_t index) {
+	static bool RemoveAt(List_Typedef* lst, int16_t index) {
 
-	/* Remove the data from the index */
-	free(lst->QuePtr[index]);
-	lst->QuePtr[index] = 0;
+		if (index > lst->LastIndex)
+			return false;
 
-	/* push the data back in order no to create a empty hole in the array */
-	for (uint16_t i = index; i < lst->Size; i++) {
-		if ((i + 1) <= lst->LastIndex)
-			lst->QuePtr[i] = lst->QuePtr[i + 1];
-	}
 
-	lst->Size -= 1;
-	lst->LastIndex -= 1;
+		/* save the index's pointers*/
+		void** tempListPtr			  = &(lst->ListPtrArr[index]->ListPtr);
+		Root_Typedef* tempListPtrArr  = lst->ListPtrArr[index];
 
-}
+		void* lastListPtr = lst->ListPtrArr[lst->LastIndex]->ListPtr;
+		Root_Typedef* lastListPtrArr = lst->ListPtrArr[lst->LastIndex];
 
-static bool Clear(List_Typedef* lst) {
-	bool retVal = false;
 
-	int listmaxLength = lst->Size;
-	for (int i = 0; i < listmaxLength; i++) {
-		if (lst->QuePtr[i] != 0x00) {
-			free(lst->QuePtr[i]);
-			lst->QuePtr[i] = 0;
+		/* shrink the array in order to discard last index*/
+		Root_Typedef**  temp = (Root_Typedef**)realloc(lst->ListPtrArr, (lst->Size - 1) * sizeof(Root_Typedef*));	/* increase the list holder */
+		if (temp != NULL) {
+
+			/* assign the shrinked array*/
+			lst->ListPtrArr = temp;
+
+			/* zero the last item*/
+			lst->ListPtrArr[lst->LastIndex] = 0;
+
+			/* push the data back in order not to create a empty hole in the array */
+			for (uint16_t i = index; i < lst->Size; i++) {
+				if ((i + 1) <= lst->LastIndex)
+					lst->ListPtrArr[i] = lst->ListPtrArr[i + 1];
+			}
+
+			lst->Size -= 1;
+			lst->LastIndex -= 1;
+
+			/* copy the last item updated position */
+			lst->ListPtrArr[lst->LastIndex] = lastListPtrArr;
+			lst->ListPtrArr[lst->LastIndex]->ListPtr = lastListPtr;			
+
+			/* Remove the list data */
+			free(*tempListPtr);
+			*tempListPtr = 0;
+
+			/* Remove the list structure */
+			free(tempListPtrArr);
+
+		}else {
+			/* error occured, no change was made, quit*/
+			return false;
 		}
+
+		return true;
 	}
 
-	return retVal;
+	static bool Clear(List_Typedef* lst) {
+		bool retVal = false;
+#if false		
+		int listmaxLength = lst->Size;
+		for (int i = 0; i < listmaxLength; i++) {
+			if (lst->QuePtr[i] != 0x00) {
+				free(lst->QuePtr[i]);
+				lst->QuePtr[i] = 0;
+			}
+		}
+#endif
+		return retVal;
+	}
+
+	static void Destroy(List_Typedef** lst) {
+#if false	
+		Clear(*lst);
+
+		free((*lst)->QuePtr);
+		(*lst)->QuePtr = 0;
+
+		/* free the pointer itself*/
+		free(*lst);
+		*lst = 0;
+#endif
+	}
+
+static bool Insert(List_Typedef* lst, int16_t index, void* data, uint16_t dataSize) {
+	/* not implemented yet */
+	return false;
 }
-
-static void Destroy(List_Typedef** lst) {
-
-	Clear(*lst);
-
-	free((*lst)->QuePtr);
-	(*lst)->QuePtr = 0;
-
-	/* free the pointer itself*/
-	free(*lst);
-	*lst = 0;
-
-}
-
 
 static bool Add(List_Typedef* lst, void* data, uint16_t dataSizeInBytes) {
 
@@ -93,12 +152,21 @@ static bool Add(List_Typedef* lst, void* data, uint16_t dataSizeInBytes) {
 	/*0 = 0*/
 	if (lst->Size == lst->LastIndex ) 			/* keeps track of initial data */
 	{
-		void** temp = NULL;
-		temp = (void**)realloc(lst->QuePtr, (lst->LastIndex + 1)*sizeof(void*));	/* increase the list holder */
+		Root_Typedef** temp = NULL;
+		Root_Typedef* ptemp = NULL;
+		temp = (Root_Typedef**)realloc(lst->ListPtrArr, (lst->LastIndex + 1) * sizeof(Root_Typedef*));	/* increase the list holder */
 		if (temp != NULL) {
-			lst->QuePtr = temp;
 			/*LastIndex = 0*/
-			lst->QuePtr[lst->LastIndex] = tempData;			/* keep the address of the pointer of copied data */
+			lst->ListPtrArr = temp;
+				ptemp = (Root_Typedef*)calloc(1, sizeof(Root_Typedef));		/* initialize the new pointer */
+				if (ptemp != NULL) {
+					lst->ListPtrArr[lst->LastIndex] = ptemp;
+				}
+				else {
+					return retVal;
+				}
+			lst->ListPtrArr[lst->LastIndex]->ListPtr = tempData;			/* keep the address of the pointer of copied data */
+			lst->ListPtrArr[lst->LastIndex]->DataSize = dataSizeInBytes;	/* Add size of the data */
 			lst->Size += 1;
 		}
 		else {
@@ -106,7 +174,8 @@ static bool Add(List_Typedef* lst, void* data, uint16_t dataSizeInBytes) {
 		}
 
 	} else if (lst->Size > lst->LastIndex) {
-		lst->QuePtr[lst->LastIndex] = tempData;			/* keep the address of the pointer of copied data */
+		lst->ListPtrArr[lst->LastIndex]->ListPtr = tempData;			/* keep the address of the pointer of copied data */
+		lst->ListPtrArr[lst->LastIndex]->DataSize = dataSizeInBytes;	/* Add size of the data */
 	}
 
 	return true;

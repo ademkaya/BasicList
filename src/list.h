@@ -10,11 +10,15 @@
 #include <stdint.h>
 #include <string.h>
 
+typedef struct Root {
+	void*	 ListPtr;
+	uint16_t DataSize;
+}Root_Typedef;
 
 typedef struct List {
-	void**		QuePtr;
-	int16_t		Size;
-	int16_t		LastIndex;	
+	Root_Typedef**  ListPtrArr;
+	int16_t			Size;
+	int16_t			LastIndex;	
 }List_Typedef;
 
 typedef struct ListStr {
@@ -24,7 +28,8 @@ typedef struct ListStr {
 	bool			(*Add)		 (List_Typedef* lst, void* data, uint16_t dataSize);
 	bool			(*Clear)	 (List_Typedef* lst		  );
 	bool			(*Destroy)	 (List_Typedef** lst);
-	bool			(*Remove)	 (List_Typedef* lst,int16_t index);
+	bool			(*RemoveAt)	 (List_Typedef* lst,int16_t index);
+	bool			(*Insert)	 (List_Typedef* lst, int16_t index ,void* data, uint16_t dataSize);
 
 	uint16_t		TotalListCount;
 
