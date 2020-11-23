@@ -21,7 +21,7 @@ int main()
             listsContainer.Add(listSTR, "TESTING\0"      , 8 );  
             
         /* reach the items in the list*/    
-            char* ppp = listSTR->QuePtr[1];
+            printf("%s", (char*)listSTR->ListPtrArr[3]->ListPtr);
             
         /* Remove data from index                          */
             listsContainer.Remove(listSTR, 0);
