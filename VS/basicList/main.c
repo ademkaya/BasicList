@@ -131,13 +131,18 @@ static void printStructureList(char* textData, List_Typedef* list) {
 
 static void printListNodeAddressess(char* textData, List_Typedef* list) {
     printf("------------- %s -------------\n", textData);
+    int32_t* temp = NULL;
     if(list == NULL)
         printf("--NO DATA --\n");
     else {
         for (uint16_t i = 0; i < list->Size; i++) {
-            int32_t* temp = ((int32_t*)list->ListPtrArr[i]->ListPtr);
-
-            printf("0x%X\n", temp);
+            temp = NULL;
+            if (list->ListPtrArr[i] != NULL) {
+                if (list->ListPtrArr[i]->ListPtr != NULL) {
+                    temp = ((int32_t*)list->ListPtrArr[i]->ListPtr);                    
+                }
+            }
+            printf("0x%.8X\n", temp);
         }
     }
 }

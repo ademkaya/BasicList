@@ -58,7 +58,6 @@ static List_Typedef* InitList(int16_t initialSize){
 		if (index > lst->LastIndex)
 			return false;
 
-
 		/* save the index's pointers*/
 		void** tempListPtr			  = &(lst->ListPtrArr[index]->ListPtr);
 		Root_Typedef* tempListPtrArr  = lst->ListPtrArr[index];
@@ -106,17 +105,22 @@ static List_Typedef* InitList(int16_t initialSize){
 	}
 
 	static bool Clear(List_Typedef* lst) {
-		bool retVal = false;
-#if false		
+	
 		int listmaxLength = lst->Size;
 		for (int i = 0; i < listmaxLength; i++) {
-			if (lst->QuePtr[i] != 0x00) {
-				free(lst->QuePtr[i]);
-				lst->QuePtr[i] = 0;
+			if (lst->ListPtrArr[i] != 0x00) {
+				
+				if (lst->ListPtrArr[i]->ListPtr != 0x00) {
+					free(lst->ListPtrArr[i]->ListPtr);
+					lst->ListPtrArr[i]->ListPtr = 0;
+				}
+				
+					free(lst->ListPtrArr[i]);
+					lst->ListPtrArr[i] = 0;				
 			}
 		}
-#endif
-		return retVal;
+
+		return true;
 	}
 
 	static void Destroy(List_Typedef** lst) {
