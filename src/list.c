@@ -113,10 +113,8 @@ static List_Typedef* InitList(int16_t initialSize){
 				if (lst->ListPtrArr[i]->ListPtr != 0x00) {
 					free(lst->ListPtrArr[i]->ListPtr);
 					lst->ListPtrArr[i]->ListPtr = 0;
-				}
-				
-					free(lst->ListPtrArr[i]);
-					lst->ListPtrArr[i] = 0;				
+					lst->ListPtrArr[i]->DataSize = 0;
+				}							
 			}
 		}
 
@@ -124,16 +122,28 @@ static List_Typedef* InitList(int16_t initialSize){
 	}
 
 	static void Destroy(List_Typedef** lst) {
-#if false	
+
 		Clear(*lst);
 
-		free((*lst)->QuePtr);
-		(*lst)->QuePtr = 0;
+		int listmaxLength = (*lst)->Size;
+		for (int i = 0; i < listmaxLength; i++) {
+			if ((*lst)->ListPtrArr[i] != 0x00) {
+				free((*lst)->ListPtrArr[i]);
+				(*lst)->ListPtrArr[i] = 0;
+			}
+		}
 
-		/* free the pointer itself*/
+		/* free the root */
+		free((*lst)->ListPtrArr);
+		(*lst)->ListPtrArr = 0;
+
+		(*lst)->Size = -1;
+		(*lst)->LastIndex = -1;
+
+		///* free the pointer itself*/
 		free(*lst);
 		*lst = 0;
-#endif
+
 	}
 
 static bool Insert(List_Typedef* lst, int16_t index, void* data, uint16_t dataSize) {
